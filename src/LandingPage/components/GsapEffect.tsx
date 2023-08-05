@@ -14,48 +14,43 @@ export enum effectNames {
 gsap.registerEffect({
   name: effectNames.loading,
   effect(targets: any) {
-    const numberOfTargets = targets[0].children.length;
-
-    const duration = 0.5; //change this
-
-    const secondEntry = duration;
-    const thirdEntry = duration * 2;
+    const duration = 0.1;
     const thirdItemDuration = 0.01;
-    const stagger = duration + duration;
-    const repeatDelay = stagger * (numberOfTargets - 1) + 1;
 
-    return gsap
-      .timeline({
-        defaults: {
-          ease: "none",
-          duration: duration,
-          stagger: {
-            each: stagger,
-            repeat: -1,
-            repeatDelay: repeatDelay,
+    const mainTL = gsap.timeline({
+      repeat: -1,
+      defaults: {
+        ease: "power4.out",
+        duration: duration,
+      },
+    });
+    const target: HTMLElement[] = Array.from(targets[0].children);
+
+    target.forEach((img) => {
+      const imgTL = gsap.timeline();
+      imgTL
+        .fromTo(
+          img,
+          {
+            scale: 0,
+            y: 0,
+            opacity: 1,
           },
-        },
-      })
-      .from(targets[0].children, {
-        scale: 0,
-        y: 0,
-        opacity: 1,
-      })
-      .to(
-        targets[0].children,
-        {
+          {
+            scale: 2,
+          }
+        )
+        .to(img, {
           y: 10,
-        },
-        secondEntry
-      )
-      .to(
-        targets[0].children,
-        {
+        })
+        .to(img, {
           opacity: 0,
-          // duration: thirdItemDuration,
-        },
-        thirdEntry
-      );
+          duration: thirdItemDuration,
+        });
+      mainTL.add(imgTL);
+    });
+
+    return mainTL;
   },
 });
 
