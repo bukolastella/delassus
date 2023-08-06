@@ -2,6 +2,8 @@ import React, { useLayoutEffect, useRef } from "react";
 import { styled } from "styled-components";
 import Constaint from "../../Layout/Constaint";
 import { gsap } from "gsap";
+import { CustomEase } from "gsap/CustomEase";
+import Nav from "./Nav";
 
 const Hero = () => {
   const container = useRef<HTMLImageElement>(null);
@@ -9,23 +11,44 @@ const Hero = () => {
   useLayoutEffect(() => {
     const ctx = gsap.context((self) => {
       const slideWrapperBox = self.selector && self.selector(".slideWrapper");
-      const boxes = self.selector && self.selector(".box");
-      const duration = 1;
-      const tl = gsap.timeline({
-        repeat: -1,
-        delay: 1,
+      const targets = slideWrapperBox[0].children;
+
+      let numberOfTargets = targets.length;
+
+      let duration = 2; //change this
+      let pause = 0.4; // change this
+
+      let stagger = duration + pause;
+      let repeatDelay = stagger * (numberOfTargets - 1) + pause;
+
+      let animation = gsap.timeline({
+        defaults: {
+          ease: "circ.in",
+          // ease: "none",
+          // ease: CustomEase.create(
+          //   "custom",
+          //   "M0,0 C0,0 0,0.034 0.066,0.126 0.071,0.151 0.144,0.212 0.156,0.234 0.163,0.248 0.214,0.289 0.226,0.3 0.416,0.478 0.486,0.496 0.66,0.684 0.671,0.696 0.725,0.757 0.736,0.768 0.749,0.781 0.791,0.826 0.8,0.846 0.81,0.869 0.851,0.915 0.856,0.942 0.872,1.036 1,0.99 1,0.99 "
+          // ),
+          duration: duration,
+          stagger: {
+            each: stagger,
+            repeat: -1,
+            repeatDelay: repeatDelay,
+          },
+        },
       });
 
-      boxes.forEach((element: any, i: number) => {
-        const miniTl = gsap
-          .timeline()
-          .to(slideWrapperBox, { x: `-${i + 1}00vw`, duration: duration });
-
-        console.log(boxes, "boxes");
-        // .addPause(2);
-        // .to(slideWrapperBox, { duration: duration });
-        tl.add(miniTl);
-      });
+      animation
+        .from(targets, {
+          x: "100vw",
+        })
+        .to(
+          targets,
+          {
+            x: "-100vw",
+          },
+          stagger
+        );
     }, container);
 
     return () => ctx.revert();
@@ -49,6 +72,7 @@ const Hero = () => {
           </Slide>
         </SlideWrapper>
       </Wrapper>
+      <Nav />
     </Container>
   );
 };
@@ -56,19 +80,22 @@ const Hero = () => {
 export default Hero;
 
 const Container = styled.div`
-  overflow-x: hidden;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
 `;
 
 const Wrapper = styled.div`
-  display: inline-block;
-  height: 100vh;
+  position: absolute;
+  /* display: inline-block; */
+  width: 100%;
+  height: 100%;
 `;
 
 const SlideWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* transform: translateX(0); */
+  position: relative;
+  width: 100%;
   height: 100%;
 `;
 
@@ -77,7 +104,8 @@ interface SlideProps {
 }
 
 const Slide = styled.div<SlideProps>`
-  width: 100vw;
+  position: absolute;
+  width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
