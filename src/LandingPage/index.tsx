@@ -3,7 +3,12 @@ import Loading from "./components/Loading";
 import Hero from "./components/Hero";
 
 const LandingPage = () => {
-  return <Loading />;
+  return (
+    <>
+      {/* <Loading /> */}
+      <Hero />
+    </>
+  );
 };
 
 export default LandingPage;
