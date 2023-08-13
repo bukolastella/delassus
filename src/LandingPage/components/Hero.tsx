@@ -1,49 +1,60 @@
 import React, { useLayoutEffect, useRef } from "react";
 import { styled } from "styled-components";
-import Constaint from "../../Layout/Constaint";
 import { gsap } from "gsap";
-import { CustomEase } from "gsap/CustomEase";
 import Nav from "./Nav";
 
 const Hero = () => {
-  const container = useRef<HTMLImageElement>(null);
+  const container = useRef<HTMLDivElement>(null);
+  const mainTl = useRef<any>(null);
+  const pause = 6.5;
+  const duration = 1;
+  const bgDuration = pause / 1.3;
 
   useLayoutEffect(() => {
     const ctx = gsap.context((self) => {
-      const slideWrapperBox = self.selector && self.selector(".slideWrapper");
-      const targets = slideWrapperBox[0].children;
+      if (!self.selector) return;
+      const boxes = self.selector(".box");
 
-      let numberOfTargets = targets.length;
+      mainTl.current = gsap.timeline();
 
-      let duration = 2; //change this
-      let pause = 0.4; // change this
-
-      let stagger = duration + pause;
-      let repeatDelay = stagger * (numberOfTargets - 1) + pause;
-
-      let animation = gsap.timeline({
-        defaults: {
-          ease: "circ.in",
-          duration: duration,
-          stagger: {
-            each: stagger,
-            repeat: -1,
-            repeatDelay: repeatDelay,
+      const tl = gsap
+        .timeline({
+          defaults: {
+            duration: duration,
+            stagger: {
+              each: pause,
+            },
           },
-        },
-      });
+        })
+        .to(boxes, { left: "0" })
+        .to(boxes, { left: "-100%" }, pause);
 
-      // animation
-      //   .from(targets, {
-      //     x: "100vw",
-      //   })
-      //   .to(
-      //     targets,
-      //     {
-      //       x: "-100vw",
-      //     },
-      //     stagger
-      //   );
+      mainTl.current.add(tl).addPause();
+    }, container);
+
+    return () => ctx.revert();
+  }, []);
+
+  useLayoutEffect(() => {
+    const ctx = gsap.context((self) => {
+      if (!self.selector) return;
+      const slideWrapper = self.selector(".slideWrapper");
+
+      const bgTl = gsap.timeline();
+
+      const background = ["green", "orange", "yellow", "#ffe5b4", "pink"];
+
+      const wait = () => {
+        gsap.delayedCall(5.8, () => bgTl.play());
+      };
+
+      background.forEach((bg) => {
+        const tl = gsap.timeline().to(slideWrapper, {
+          backgroundColor: bg,
+        });
+
+        bgTl.add(tl).addPause(">", wait);
+      });
     }, container);
 
     return () => ctx.revert();
@@ -53,18 +64,10 @@ const Hero = () => {
     <Container>
       <Wrapper ref={container}>
         <SlideWrapper className="slideWrapper">
-          <Slide bg="red" className="box">
-            Slide 1
-          </Slide>
-          <Slide bg="yellow" className="box">
-            Slide 2
-          </Slide>
-          <Slide bg="orange" className="box">
-            Slide 3
-          </Slide>
-          <Slide bg="green" className="box">
-            Slide 4
-          </Slide>
+          <Slide className="box">Slide 1</Slide>
+          <Slide className="box">Slide 2</Slide>
+          <Slide className="box">Slide 3</Slide>
+          <Slide className="box">Slide 4</Slide>
         </SlideWrapper>
       </Wrapper>
       <Nav />
@@ -75,15 +78,11 @@ const Hero = () => {
 export default Hero;
 
 const Container = styled.div`
-  overflow: hidden;
-  width: 100vw;
+  background-color: red;
   height: 100vh;
-  position: relative;
 `;
 
 const Wrapper = styled.div`
-  position: absolute;
-  /* display: inline-block; */
   width: 100%;
   height: 100%;
 `;
@@ -92,18 +91,15 @@ const SlideWrapper = styled.div`
   position: relative;
   width: 100%;
   height: 100%;
+  overflow-x: hidden;
 `;
 
-interface SlideProps {
-  bg: string;
-}
-
-const Slide = styled.div<SlideProps>`
+const Slide = styled.div`
   position: absolute;
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ bg }) => bg};
+  left: 100%;
 `;

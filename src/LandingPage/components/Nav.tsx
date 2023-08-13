@@ -1,134 +1,88 @@
-import React, { useLayoutEffect, useRef } from "react";
+import React, { FC, useLayoutEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { styled } from "styled-components";
 
-const Nav = () => {
-  const container = useRef<HTMLImageElement>(null);
-  const animation = useRef<any>(null);
-  const stretch = useRef<any>(null);
+interface Props {}
+
+const Nav: FC<Props> = () => {
+  const container = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     const ctx = gsap.context((self) => {
-      const boxes = self.selector && self.selector(".box");
-      const wrap = self.selector && self.selector(".wrap");
+      if (!self.selector) return;
 
-      gsap.timeline().fromTo(
-        container.current,
-        {
-          opacity: 0,
-          ease: "none",
-        },
-        {
-          opacity: 1,
-          bottom: "300px",
-          ease: "none",
-        }
-      );
+      const containerBox = self.selector(".container");
+      const boxes = self.selector(".box");
+      const transLine = self.selector(".transLine");
 
-      animation.current = gsap.timeline({ repeat: -1 });
+      gsap.to(containerBox, { bottom: 300 });
 
-      boxes.forEach((element: HTMLElement, index: number) => {
-        const boxTl = gsap
+      const mainTl = gsap.timeline();
+
+      boxes.forEach((box: HTMLDivElement, index: number) => {
+        const progress = gsap
           .timeline()
-          .to(element, {
-            "--opacity": 1,
-            ease: "none",
-          })
-          .to(element, {
-            "--width": "100%",
-            ease: "none",
-            duration: 5,
-          });
-
-        stretch.current = gsap
-          .timeline()
-          .set(wrap, {
-            x: boxes[index].offsetLeft,
+          .set(box, { "--opacity": 1 })
+          .set(transLine, {
             width: boxes[index].clientWidth,
-            opacity: 1,
+            x: boxes[index].offsetLeft,
           })
-          .to(wrap, {
-            x: boxes[index === boxes.length - 1 ? 0 : index + 1].offsetLeft,
+          .to(box, { color: "white" })
+          .to(box, { "--afterWidth": "100%", duration: 5 })
+          .set(box, { "--opacity": 0 })
+          .to(box, { color: "#cdcccc" })
+          .set(
+            transLine,
+            {
+              opacity: 1,
+            },
+            "<"
+          )
+          .to(transLine, {
             width:
               boxes[index === boxes.length - 1 ? 0 : index + 1].clientWidth,
+            x: boxes[index === boxes.length - 1 ? 0 : index + 1].offsetLeft,
           })
-          .to(
-            element,
-            {
-              color: "white",
-              ease: "none",
-              duration: 0.1,
-            },
-            "<"
-          )
-          .to(
-            element,
-            {
-              "--opacity": 0,
-              color: "#cdcccc",
-              ease: "none",
-              duration: 0.1,
-            },
-            "<"
-          )
-          .to(
-            wrap,
-            {
-              opacity: 0,
-            },
-            "=-0.2"
-          );
+          .set(transLine, {
+            opacity: 0,
+          });
 
-        animation.current?.addLabel(`${index}`).add(boxTl).add(stretch.current);
+        mainTl.addLabel(`${index}`).add(progress);
 
-        const toggle = (el: any) => {
-          animation.current.progress(1);
-          animation.current.kill();
-          const clickedElement = el.target;
-          const temp = gsap
+        box.addEventListener("click", () => {
+          gsap
             .timeline()
-            .to(wrap, {
+            .set(transLine, {
               opacity: 1,
-              x: clickedElement.offsetLeft,
-              width: clickedElement.clientWidth,
             })
-            .to(
-              wrap,
-              {
-                opacity: 0,
-                onComplete: () => animation.current?.play(`${index}`),
+            .to(transLine, {
+              width: box.clientWidth,
+              x: box.offsetLeft,
+              onComplete: () => {
+                mainTl.play(`${index}`);
               },
-              "=-0.2"
-            );
-          temp.play();
-        };
-
-        element.addEventListener("click", toggle);
+            });
+        });
       });
-
-      // return () =>
-      //   boxes.forEach((element: any) =>
-      //     element.removeEventListener("click", toggle)
-      //   );
     }, container);
 
     return () => ctx.revert();
   }, []);
 
   return (
-    <Container ref={container}>
-      <Wrapper>
-        <div className="wrap"></div>
-        <div className="box">Snacking tomatoes</div>
-        <div className="box" onClick={() => {}}>
-          Citrus
-        </div>
-        <div className="box">Grapes</div>
-        <div className="box">Avocados</div>
-        <div className="box">Flowers</div>
-      </Wrapper>
-      <Button>Discover</Button>
-    </Container>
+    <div ref={container}>
+      <Container className="container">
+        <Wrapper>
+          <TransLine className="transLine" />
+          <Box className="box">Snacking tomatoes</Box>
+          <Box className="box">Citrus</Box>
+          <Box className="box">Grapes</Box>
+          <Box className="box">Avocados</Box>
+          <Box className="box">Flowers</Box>
+        </Wrapper>
+        <Button>Discover</Button>
+      </Container>
+    </div>
   );
 };
 
@@ -139,7 +93,6 @@ const Container = styled.div`
   display: flex;
   align-items: center;
   gap: 40px;
-  z-index: 10;
   bottom: 100px;
   left: 200px;
 `;
@@ -149,49 +102,51 @@ const Wrapper = styled.div`
   align-items: center;
   gap: 20px;
   position: relative;
+`;
 
-  .wrap {
-    background-color: white;
-    height: 2px;
+const TransLine = styled.div`
+  background-color: white;
+  height: 2px;
+  position: absolute;
+  bottom: -10px;
+  opacity: 0;
+  left: 0;
+`;
+
+const Box = styled.div`
+  cursor: pointer;
+  position: relative;
+  font-size: 1.5rem;
+  color: #cdcccc;
+  --opacity: 0;
+  --afterWidth: 0;
+  /* --width: 0;
+  --opacity: 0;
+  --left: 0;
+  --right: unset; */
+
+  &::before,
+  &::after {
+    content: "";
     position: absolute;
-    bottom: -10px;
-    opacity: 1; //
-    width: 200px; //
     left: 0;
+    bottom: -10px;
+    height: 2px;
+    opacity: var(--opacity);
   }
 
-  .box {
-    cursor: pointer;
-    position: relative;
-    font-size: 1.5rem;
-    color: #cdcccc;
-    --width: 0;
-    --opacity: 0;
-    --left: 0;
-    --right: unset;
+  &::before {
+    width: 100%;
+    background-color: #908f8f;
+    /* left: var(--left); */
+  }
 
-    &::before,
-    &::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      left: var(--left);
-      bottom: -10px;
-      height: 2px;
-      opacity: var(--opacity);
-    }
-
-    &::before {
-      width: 100%;
-      background-color: #908f8f;
-    }
-
-    &::after {
-      width: var(--width);
-      background-color: white;
-      left: var(--left);
-      right: var(--right);
-    }
+  &::after {
+    background-color: white;
+    width: var(--afterWidth);
+    /* width: var(--width);
+    left: var(--left);
+    right: var(--right); */
   }
 `;
 
