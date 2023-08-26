@@ -1,88 +1,22 @@
-import React, { FC, useLayoutEffect, useRef } from "react";
-import { gsap } from "gsap";
+import React, { FC } from "react";
 import { styled } from "styled-components";
+import { Eclasses } from "./Hero";
 
 interface Props {}
 
 const Nav: FC<Props> = () => {
-  const container = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    const ctx = gsap.context((self) => {
-      if (!self.selector) return;
-
-      const containerBox = self.selector(".container");
-      const boxes = self.selector(".box");
-      const transLine = self.selector(".transLine");
-
-      gsap.to(containerBox, { bottom: 300 });
-
-      const mainTl = gsap.timeline();
-
-      boxes.forEach((box: HTMLDivElement, index: number) => {
-        const progress = gsap
-          .timeline()
-          .set(box, { "--opacity": 1 })
-          .set(transLine, {
-            width: boxes[index].clientWidth,
-            x: boxes[index].offsetLeft,
-          })
-          .to(box, { color: "white" })
-          .to(box, { "--afterWidth": "100%", duration: 5 })
-          .set(box, { "--opacity": 0 })
-          .to(box, { color: "#cdcccc" })
-          .set(
-            transLine,
-            {
-              opacity: 1,
-            },
-            "<"
-          )
-          .to(transLine, {
-            width:
-              boxes[index === boxes.length - 1 ? 0 : index + 1].clientWidth,
-            x: boxes[index === boxes.length - 1 ? 0 : index + 1].offsetLeft,
-          })
-          .set(transLine, {
-            opacity: 0,
-          });
-
-        mainTl.addLabel(`${index}`).add(progress);
-
-        box.addEventListener("click", () => {
-          gsap
-            .timeline()
-            .set(transLine, {
-              opacity: 1,
-            })
-            .to(transLine, {
-              width: box.clientWidth,
-              x: box.offsetLeft,
-              onComplete: () => {
-                mainTl.play(`${index}`);
-              },
-            });
-        });
-      });
-    }, container);
-
-    return () => ctx.revert();
-  }, []);
-
   return (
-    <div ref={container}>
-      <Container className="container">
-        <Wrapper>
-          <TransLine className="transLine" />
-          <Box className="box">Snacking tomatoes</Box>
-          <Box className="box">Citrus</Box>
-          <Box className="box">Grapes</Box>
-          <Box className="box">Avocados</Box>
-          <Box className="box">Flowers</Box>
-        </Wrapper>
-        <Button>Discover</Button>
-      </Container>
-    </div>
+    <Container className={Eclasses.container}>
+      <Wrapper>
+        <TransLine className={Eclasses.transLine} />
+        <Box className={Eclasses.nav_box}>Snacking tomatoes</Box>
+        <Box className={Eclasses.nav_box}>Citrus</Box>
+        <Box className={Eclasses.nav_box}>Grapes</Box>
+        <Box className={Eclasses.nav_box}>Avocados</Box>
+        <Box className={Eclasses.nav_box}>Flowers</Box>
+      </Wrapper>
+      <Button>Discover</Button>
+    </Container>
   );
 };
 
